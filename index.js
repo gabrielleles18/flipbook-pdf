@@ -1,24 +1,18 @@
-// Sample using dynamic pages with turn.js
-
-// let url = 'pdf/test.pdf';
-let url = 'pdfs/nov.pdf';
+let url = 'pdfs/out.pdf';
 
 let pdf = null,
     pageNum = 1,
     rendered = [],
     numberOfPages = 0,
     firstPagesRendered = false,
-    scale = 0.8;
+    scale = 0.6;
 
 function renderPage(num) {
-
     pdf.getPage(num).then(function (page) {
-            let scale = 0.8;
+            let scale = 1.0;
             let viewport = page.getViewport(scale);
 
-            //
             // Prepare canvas using PDF page dimensions
-            //
             let canvasID = 'canv' + num;
             let canvas = document.getElementById(canvasID);
             if (canvas == null) return;
@@ -26,9 +20,7 @@ function renderPage(num) {
             canvas.height = viewport.height;
             canvas.width = viewport.width;
 
-            //
             // Render PDF page into canvas context
-            //
             let renderContext = {
                 canvasContext: context,
                 viewport: viewport
@@ -42,44 +34,28 @@ function renderPage(num) {
     )
 }
 
-
 // Adds the pages that the book will need
 function addPage(page, book) {
     // 	First check if the page is already in the book
     if (!book.turn('hasPage', page)) {
 
-        /*
-           let element = $('<div />', {'class': 'page '+((page%2==0) ? 'odd' : 'even'), 'id': 'page-'+page}).html('<i class="loader"></i>');
-        // If not then add the page
-        book.turn('addPage', element, page);
-        // Let's assum that the data is comming from the server and the request takes 1s.
-        setTimeout(function(){
-                element.html('<div class="data">Data for page '+page+'</div>');
-        }, 1000);
-        */
-        ///*
         // Create an element for this page
-        let element = $('<div />', {'class': 'page ' + ((page % 2 == 0) ? 'odd' : 'even'), 'id': 'page-' + page})
+        let element = $('<div />', {'class': 'page ' + ((page % 2 === 0) ? 'odd' : 'even'), 'id': 'page-' + page});
         element.html('<div class="data"><canvas id="canv' + page + '"></canvas></div>');
-        // element.html('<div><i>test</i></div>');
+
         // If not then add the page
         book.turn('addPage', element, page);
-        // renderPage(page);
-        //*/
     }
 }
 
-
 $(window).ready(function () {
-
+    addHref(url);
     PDFJS.disableWorker = true;
 
     PDFJS.getDocument(url).then(function (pdfDoc) {
-
         numberOfPages = pdfDoc.numPages;
         pdf = pdfDoc;
         $('#book').turn.pages = numberOfPages;
-
 
         $('#book').turn({
             acceleration: false,
@@ -98,8 +74,6 @@ $(window).ready(function () {
                         addPage(page, $(this));
                         //renderPage(page);
                     }
-                    ;
-
                 },
 
                 turned: function (e, page) {
@@ -113,9 +87,7 @@ $(window).ready(function () {
                                 rendered[page] = true;
                             }
                         }
-                        ;
                     }
-
                 }
             }
         });
@@ -125,7 +97,7 @@ $(window).ready(function () {
         $('#page-number').keydown(function (e) {
 
             let p = $('#page-number').val();
-            if (e.keyCode == 13) {
+            if (e.which === 13) {
                 $('#book').turn('page', p);
                 renderPage(p);
             }
@@ -138,21 +110,31 @@ $(window).ready(function () {
             renderPage(page);
             rendered[page] = true;
         }
-        ;
         firstPagesRendered = true;
-
-
     });
-
-
 });
 
 $(window).bind('keydown', function (e) {
-
     if (e.target && e.target.tagName.toLowerCase() != 'input')
-        if (e.keyCode == 37)
-            $('#book').turn('previous');
-        else if (e.keyCode == 39)
-            $('#book').turn('next');
-
+        if (e.which === 37)
+            nextPage('previous');
+        else if (e.which === 39)
+            nextPage('next');
 });
+
+
+function nextPage(direction) {
+    $('#book').turn(direction);
+}
+
+function addHref(archive) {
+    $('#controls .download').attr("href", archive);
+}
+
+function changeNextPage() {
+    $('#controls .left .direction').click((event) => {
+        nextPage(event.target.innerText);
+    });
+}
+
+changeNextPage();
